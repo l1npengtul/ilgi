@@ -1,0 +1,26 @@
+[package]
+name = "ilgi_core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum-core = "0.3"
+serde_json = "1.0"
+dashmap = "5.4"
+memmap2 = "0.5"
+thiserror = "1.0"
+miette = "5.8"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.rkyv]
+version = "0.7"
+features = ["validation"]
+
+[dependencies.semver]
+version = "1.0"
+features = ["serde"]
