@@ -2,7 +2,9 @@
 
 mod theme;
 mod config;
-mod optimize;
+mod file_ops;
+mod sitebuild;
+mod db;
 
 #[tokio::main]
 async fn main() {

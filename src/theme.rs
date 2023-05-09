@@ -22,6 +22,7 @@ use tera::Tera;
 use ilgi_core::theme::ThemeDefinition;
 use upon::{Engine as UponEngine, Value};
 use crate::config::{CssStyle, IlgiConfig};
+use crate::file_ops::{add_hash_filename, optimize_static_file};
 
 #[derive(Clone, Debug, Default, PartialOrd, PartialEq)]
 pub struct DiskTheme {
@@ -50,7 +51,7 @@ pub struct Theme {
 
 impl DiskTheme {
     #[instrument]
-    pub async fn load(self) -> IResult<Theme> {
+    pub async fn load(self, config: &IlgiConfig) -> IResult<Theme> {
         //
 
         let mut tera = Tera::default();
@@ -63,6 +64,13 @@ impl DiskTheme {
                 }
             )?
         )?;
+
+        let minify_options_css = Browsers::from_browserslist(config.build.css.targets.as_ref());
+        if config.build.css.minify {
+            if let Err(why) = &minify_options_css {
+                return Err(Report::from(why))
+            }
+        }
 
         let mut sass = Arc::new(
             process_results(
@@ -93,11 +101,19 @@ impl DiskTheme {
                             }).map_err(Report::from))
                             .flatten()
                             .map(|x| (n, x.code))
+                            .map(|(n, x)| {
+                                let new_name = add_hash_filename(&n, &x);
+                                (new_name, x)
+                            })
                     })
                 } else {
                     x.map(|(n, x)| {
                         (n, String::from_utf8(x).unwrap())
                     })
+                        .map(|(n, x)| {
+                            let new_name = add_hash_filename(&n, &x);
+                            (new_name, x)
+                        })
                 }
             }
         )?.collect::<Result<DashMap<String, String>, Report>>()?);
@@ -188,20 +204,27 @@ impl DiskTheme {
             })
         }), |x| x)?;
 
-        let statics = self.statics.into_iter().map(|(name, data)| {
+        let statics = Arc::new(self.statics.into_iter().map(|(name, data)| {
             // get file extension
             let extension = match &name.rsplit_once(".") {
                 Some(s) => s.1,
                 None => ""
             };
             (name, extension, data)
-        });
+        })
+            .map(|(n, e, data)| {
+                optimize_static_file(config, e, data).map(|x| {
+                    let new_name = add_hash_filename(&n, &x);
+                    (new_name, x)
+                })
+            })
+            .collect::<IResult<DashMap<String, Box<dyn AsRef<[u8]>>>>>()?);
 
 
         Ok(
             Theme {
                 definition: self.definition,
-                statics: Arc::new(Default::default()),
+                statics,
                 tera,
                 upon,
                 rhai_engine: engine,
@@ -209,7 +232,6 @@ impl DiskTheme {
                 sass,
             }
         )
-
     }
 }
 
@@ -222,13 +244,6 @@ pub async fn parse_theme(directory: impl AsRef<Path>, config: &IlgiConfig) -> IR
     };
 
     let static_files = map_dir_to_named_mem(path.clone() + "static")?.collect::<DashMap<_, _>>();
-
-    let minify_options_css = Browsers::from_browserslist(config.build.css.targets.as_ref());
-    if config.build.css.minify {
-        if let Err(why) = &minify_options_css {
-            return Err(Report::from(why))
-        }
-    }
 
     let sass = map_dir_to_named_mem(path.clone() + "sass")?.collect::<DashMap<_, _>>();
 

@@ -30,46 +30,31 @@ pub struct Build {
     pub javascript: Js,
     #[config(nested)]
     pub css: Css,
+    pub theme: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Config)]
 pub struct Static {
     #[config(default = true)]
     pub minify_png: bool,
+    #[config(default = 3)]
+    pub minify_png_preset: u8,
+    #[config(default = true)]
+    pub minify_svg: bool,
+    #[config(default = true)]
+    pub minify_jpeg: bool,
+    #[config(default = 0.75)]
+    pub minify_jpeg_quality: f32,
+    #[config(default = true)]
+    pub minify_webp: bool,
+    #[config(default = 0.75)]
+    pub minify_webp_quality: f32,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Config)]
 pub struct Html {
     #[config(default = true)]
     pub minify: bool,
-    #[config(default = true)]
-    pub do_not_minify_doctype: bool,
-    #[config(default = true)]
-    pub ensure_spec_compliant_unquoted_attribute_values: bool,
-    #[config(default = false)]
-    pub keep_closing_tags: bool,
-    #[config(default = false)]
-    pub keep_html_and_head_opening_tags: bool,
-    #[config(default = true)]
-    pub keep_spaces_between_attributes: bool,
-    #[config(default = false)]
-    pub keep_comments: bool,
-    #[config(nested, default = HtmlMinifyCssLevel::Lowest)]
-    pub minify_css_level: HtmlMinifyCssLevel,
-    #[config(default = true)]
-    pub minify_js: bool,
-    #[config(default = false)]
-    pub remove_bangs: bool,
-    #[config(default = false)]
-    pub remove_processing_instructions: bool,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Config)]
-pub enum HtmlMinifyCssLevel {
-    Off,
-    Lowest,
-    Middle,
-    Highest,
 }
 
 #[derive(Clone, Debug, PartialEq, Config)]
@@ -101,7 +86,7 @@ pub enum CssStyle {
 
 #[derive(Clone, Debug, PartialEq, Config)]
 pub struct Git {
-    pub git_repo: Option<String>,
+    pub git_repo: String,
     #[config(default = "main")]
     pub git_branch: String,
     #[config(nested, default = GitAuth::None)]
@@ -130,5 +115,7 @@ pub enum GitAuth {
 #[derive(Clone, Debug, PartialEq, Config)]
 pub enum GitUpdate {
     Polling,
-    Webhook,
+    Webhook {
+        secret: Option<String>,
+    },
 }

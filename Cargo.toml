@@ -32,6 +32,13 @@ tracing-subscriber = "0.3.17"
 tokio-stream = "0.1"
 fallible-iterator = "0.2"
 itertools = "0.10.5"
+oxipng = "8.0.0"
+tempfile = "3.5.0"
+github_webhook_message_validator = "0.1.6"
+rimage = "0.6.0"
+imagesize = "0.11.0"
+base64 = "0.21.0"
+url = "2.3.1"
 
 [dependencies.tokio]
 version = "1"
@@ -72,6 +79,15 @@ features = ["yaml"]
 version = "1.0.0-alpha.41"
 features = ["browserslist"]
 
-[dependencies.sqlx]
-version = "0.7.0-alpha.2"
-features = ["runtime-tokio-rustls", "postgres", "sqlite"]
+[dependencies.svgcleaner]
+git = "https://github.com/l1npengtul/svgcleaner"
+branch = "master"
+default-features = false
+
+[dependencies.gix]
+version = "0.44.1"
+features = ["blocking-http-transport-reqwest-rust-tls", "async-network-client", "pack-cache-lru-static"]
+
+[dependencies.sea-orm]
+version = "0.11.3"
+features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-json", "sea-orm-internal", "postgres-array"]
